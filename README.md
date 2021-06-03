@@ -1,0 +1,1 @@
+Fbcp for r61505 spi lcd using spidev.
