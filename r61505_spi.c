@@ -183,14 +183,19 @@ static void lcd_setBlock(unsigned int x_start, unsigned int x_end, unsigned int 
 }
 
 void lcd_drawPixel(uint16_t x, uint16_t y, uint16_t color) {
-    lcd_blockWrite(x, x, y, y);
+    lcd_setBlock(x, x, y, y);
     lcd_writeDATA16(color);
 }
 
 void lcd_drawBlock(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t *bitmap) {
+    unsigned char tmp = 0x72, data[2];
     lcd_setBlock(x, x + width, y, y + height);
     spi_cs(0);
-    spi_write(1, 0x72);
-    spi_write(width * height * sizeof(uint16_t), bitmap);
+    spi_write(1, &tmp);
+    for(int i = 0; i < width * height; i++) {
+        data[0] = (bitmap[i] >> 8) & 0xff;
+        data[1] = bitmap[i] & 0xff;
+        spi_write(2, data);
+    }
     spi_cs(1);
 }
