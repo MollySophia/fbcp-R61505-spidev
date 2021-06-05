@@ -6,6 +6,6 @@ typedef enum {
     MODE_COMMAND
 } DATA_MODE;
 
-int lcd_init(bool flipped, int spi_freq, int channel);
+int lcd_init(bool flipped, int spi_freq, int channel, int cs);
 void lcd_drawPixel(uint16_t x, uint16_t y, uint16_t color);
 #endif
