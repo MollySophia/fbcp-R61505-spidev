@@ -23,7 +23,7 @@ static void spi_write(int size, unsigned char *data);
 static void lcd_writeCMD(unsigned char cmd);
 static void lcd_writeDATA16(uint16_t data);
 static void lcd_writeREG(uint16_t index, uint16_t data);
-static void lcd_blockWrite(unsigned int x_start, unsigned int x_end, unsigned int y_start, unsigned int y_end);
+static void lcd_setBlock(unsigned int x_start, unsigned int x_end, unsigned int y_start, unsigned int y_end);
 
 static void export_gpio(int pin, int direction) {
     char tmp[64];
@@ -170,7 +170,7 @@ int lcd_init(bool flipped, int spi_freq, int channel, int cs) {
     return 0;
 }
 
-static void lcd_blockWrite(unsigned int x_start, unsigned int x_end, unsigned int y_start, unsigned int y_end) {
+static void lcd_setBlock(unsigned int x_start, unsigned int x_end, unsigned int y_start, unsigned int y_end) {
     lcd_writeREG(0x0020, y_start);
     lcd_writeREG(0x0021, x_start);
 
@@ -185,4 +185,12 @@ static void lcd_blockWrite(unsigned int x_start, unsigned int x_end, unsigned in
 void lcd_drawPixel(uint16_t x, uint16_t y, uint16_t color) {
     lcd_blockWrite(x, x, y, y);
     lcd_writeDATA16(color);
+}
+
+void lcd_drawBlock(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t *bitmap) {
+    lcd_setBlock(x, x + width, y, y + height);
+    spi_cs(0);
+    spi_write(1, 0x72);
+    spi_write(width * height * sizeof(uint16_t), bitmap);
+    spi_cs(1);
 }
