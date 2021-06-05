@@ -13,8 +13,9 @@
 #define GPIO_IN 1
 
 static struct spi_ioc_transfer xfer;
-static int file_spi = -1;
+static int file_spi = -1, file_cs = -1;
 static int cs_pin = -1;
+static unsigned char data_buf[3];
 
 static void export_gpio(int pin, int direction);
 static void spi_cs(int value);
@@ -46,12 +47,12 @@ static void export_gpio(int pin, int direction) {
 
 static void spi_cs(int value) {
     if(cs_pin != -1) {
-        char tmp[64];
-        sprintf(tmp, "/sys/class/gpio/gpio%d/value", cs_pin);
-        int file_gpio = open(tmp, O_WRONLY), rc;
-        rc = write(file_gpio, (value == 1 ? "1" : "0"), 1);
-        if(rc < 0) printf("Failed to set CS value");
-        close(file_gpio);
+        if(file_cs == -1) {
+            char tmp[64];
+            sprintf(tmp, "/sys/class/gpio/gpio%d/value", cs_pin);
+            file_cs = open(tmp, O_WRONLY);
+        }
+        write(file_cs, (value == 1 ? "1" : "0"), 1);
     }
 }
 
@@ -62,21 +63,22 @@ static void spi_write(int size, unsigned char *data) {
 }
 
 static void lcd_writeCMD(unsigned char cmd) {
-    unsigned char cmds[3] = {0x70, 0x00, 0x00};
-    cmds[2] = cmd;
+    data_buf[0] = 0x70;
+    data_buf[1] = 0x00;
+    data_buf[2] = cmd;
 
     spi_cs(0);
-    spi_write(3, cmds);
+    spi_write(3, data_buf);
     spi_cs(1);
 }
 
 static void lcd_writeDATA16(uint16_t data) {
-    unsigned char datas[3] = {0x72, 0x00, 0x00};
-    datas[1] = (data >> 8) & 0xff;
-    datas[2] = data & 0xff;
+    data_buf[0] = 0x72;
+    data_buf[1] = (data >> 8) & 0xff;
+    data_buf[2] = data & 0xff;
 
     spi_cs(0);
-    spi_write(3, datas);
+    spi_write(3, data_buf);
     spi_cs(1);
 }
 
