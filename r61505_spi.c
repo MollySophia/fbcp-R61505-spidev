@@ -16,7 +16,7 @@ static struct spi_ioc_transfer xfer;
 static int file_spi = -1, file_cs = -1;
 static int cs_pin = -1;
 static unsigned char data_buf[3];
-static unsigned char rxBuf[4096];
+static unsigned char txBuf[4096];
 
 static void export_gpio(int pin, int direction);
 static void spi_cs(int value);
@@ -111,7 +111,7 @@ int lcd_init(bool flipped, int spi_freq, int channel, int cs) {
     xfer.delay_usecs = 0;
     xfer.bits_per_word = 8;
 
-    memset(rxBuf, 0, sizeof(rxBuf));
+    memset(txBuf, 0, sizeof(txBuf));
 
     export_gpio(cs_pin, GPIO_OUT);
 
@@ -196,18 +196,7 @@ void lcd_drawBlock(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint
     lcd_setBlock(x, x + width, y, y + height);
     spi_cs(0);
     spi_write(1, &tmp);
-    for(int i = 0; i < width * height; i++) {
-        rxBuf[pos] = (bitmap[i] >> 8) & 0xff;
-        rxBuf[pos + 1] = bitmap[i] & 0xff;
-        pos += 2;
-        if(pos == 4096) {
-            spi_write(4096, rxBuf);
-            pos = 0;
-        }
-    }
-    if(pos != 0) {
-        spi_write(pos, rxBuf);
-    }
+    spi_write(width * height * 2, bitmap);
     spi_cs(1);
 }
 
