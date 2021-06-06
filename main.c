@@ -354,7 +354,7 @@ int main(int argc, char **argv) {
     while (nanoClock() < llTime) // run for 1 second
     {	// force total redraw each frame
         memset(altscreen, 0xff, lcdPitch * LCD_HEIGHT);
-        CopyLoop();
+        copyLoop();
         iFrames++;
     }
     if (!background)
