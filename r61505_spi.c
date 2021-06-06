@@ -16,7 +16,6 @@ static struct spi_ioc_transfer xfer;
 static int file_spi = -1, file_cs = -1;
 static int cs_pin = -1;
 static unsigned char data_buf[3];
-static unsigned char txBuf[4096];
 
 static void export_gpio(int pin, int direction);
 static void spi_cs(int value);
@@ -111,8 +110,6 @@ int lcd_init(bool flipped, int spi_freq, int channel, int cs) {
     xfer.delay_usecs = 0;
     xfer.bits_per_word = 8;
 
-    memset(txBuf, 0, sizeof(txBuf));
-
     export_gpio(cs_pin, GPIO_OUT);
 
     lcd_writeREG(0x0000,0x0000);
@@ -191,12 +188,16 @@ void lcd_drawPixel(uint16_t x, uint16_t y, uint16_t color) {
 }
 
 void lcd_drawBlock(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t *bitmap) {
-    unsigned char tmp = 0x72;
-    int pos = 0;
+    unsigned char tmp = 0x72, data[2];
     lcd_setBlock(x, x + width, y, y + height);
     spi_cs(0);
     spi_write(1, &tmp);
-    spi_write(width * height * 2, bitmap);
+    // for(int i = 0; i < width * height; i++) {
+    //     data[0] = (bitmap[i] >> 8) & 0xff;
+    //     data[1] = bitmap[i] & 0xff;
+    //     spi_write(2, data);
+    // }
+    spi_write(width * height * 2, (unsigned char *)bitmap);
     spi_cs(1);
 }
 
@@ -205,8 +206,7 @@ int lcd_drawTile(int x, int y, int tileWidth, int tileHeight, unsigned char *til
         return -1;
     if(tileWidth * tileHeight > 2048)
         return -1;
-
-    
+        
 }
 
 
