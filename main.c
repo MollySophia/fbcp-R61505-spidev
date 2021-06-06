@@ -333,6 +333,9 @@ int main(int argc, char **argv) {
     lcdFlip = false;
     background = false;
 
+    tileWidth = 64;
+    tileHeight = 30;
+
     ParseOpts(argc, argv);
 
     if(initDisplay(lcdFlip, spiChannel, spiFreq, csPin) != 0) {
