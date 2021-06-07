@@ -112,7 +112,7 @@ static int findChangedRegion(unsigned char *src, unsigned char *dst, int width,
 }
 
 static void fbCapture(void) {
-    if(vinfo.xres > LCD_WIDTH * 2) { //shrink by 1/4
+    if(vinfo.xres >= LCD_WIDTH * 2) { //shrink by 1/4
         if(vinfo.bits_per_pixel == 16) {
             uint32_t *s, *d, magic, u32_1, u32_2;
             int x, y;
@@ -287,7 +287,7 @@ void *copyThread(void *arg) {
             fps = (float)videoFrames;
             fps = fps * 1000000000.0;
             fps = fps / (float)(time - oldTime);
-            if(background == false)
+            if(!background)
                 printf("%02.1f FPS\n", fps);
             videoFrames = 0;
             oldTime = time;
