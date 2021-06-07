@@ -343,6 +343,8 @@ int main(int argc, char **argv) {
         return 0;
     }
 
+    printf("/dev/fb0: %dx%d, %dbpp\n", vinfo.xres, vinfo.yres, vinfo.bits_per_pixel);
+
     if (vinfo.xres > 640)
 		printf("Warning: the framebuffer is too large and will not be copied properly; sipported sizes are 640x480 and 320x240\n");
 	if (vinfo.bits_per_pixel == 32)
