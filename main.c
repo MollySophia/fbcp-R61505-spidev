@@ -180,7 +180,7 @@ static void copyLoop(void) {
 
     fbCapture();
 
-    lcd_drawBlock16(0, 0, 320, 240, screen);
+    lcd_drawBlock8(0, 0, 320, 240, screen);
     
     // changed = findChangedRegion(screen, altscreen, LCD_WIDTH, LCD_HEIGHT, lcdPitch, tileWidth, tileHeight, regions);
     // if(changed) {
