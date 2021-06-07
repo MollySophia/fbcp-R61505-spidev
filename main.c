@@ -221,6 +221,19 @@ static void copyLoop(void) {
     }
 }
 
+static void ShowHelp(void) {
+    printf(
+        "Options:\n"
+        " --spi_bus <integer>      defaults to 1\n"
+        " --spi_freq <integer>     defaults to 33000000\n"
+        " --lcd_cs <pin number>    defaults to 13\n"
+        " --flip                   flips display 180 degrees\n"
+        " --showfps                Show framerate\n"
+	    " --background             suppress printf output if running as a bkgd process\n"
+        " --help                   print help\n"
+    );
+} /* ShowHelp() */
+
 static int ParseOpts(int argc, char *argv[]) {
     int i = 1;
 
@@ -268,19 +281,6 @@ static int ParseOpts(int argc, char *argv[]) {
     return i;
 
 } /* ParseOpts() */
-
-static void ShowHelp(void) {
-    printf(
-        "Options:\n"
-        " --spi_bus <integer>      defaults to 1\n"
-        " --spi_freq <integer>     defaults to 33000000\n"
-        " --lcd_cs <pin number>    defaults to 13\n"
-        " --flip                   flips display 180 degrees\n"
-        " --showfps                Show framerate\n"
-	    " --background             suppress printf output if running as a bkgd process\n"
-        " --help                   print help\n"
-    );
-} /* ShowHelp() */
 
 void *copyThread(void *arg) {
     int64_t ns;
