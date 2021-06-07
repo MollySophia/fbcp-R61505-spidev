@@ -285,7 +285,7 @@ void *copyThread(void *arg) {
             fps = (float)videoFrames;
             fps = fps * 1000000000.0;
             fps = fps / (float)(time - oldTime);
-            if(!background)
+            //if(!background)
                 printf("%02.1f FPS\n", fps);
             videoFrames = 0;
             oldTime = time;
@@ -332,7 +332,6 @@ int main(int argc, char **argv) {
     spiFreq = 33000000;
     lcdFlip = false;
     background = false;
-    running = true;
 
     tileWidth = 64;
     tileHeight = 30;
