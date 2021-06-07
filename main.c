@@ -78,7 +78,8 @@ static int findChangedRegion(unsigned char *src, unsigned char *dst, int width,
 {
     int x, y, xc, yc, dy;
     int xCount, yCount;
-    uint32_t *s, *d, rowBits;
+    uint16_t *s, *d;
+    uint32_t rowBits;
     int totalChanged = 0;
 
     xCount = (height + tileHeight - 1) / tileHeight;
@@ -87,8 +88,8 @@ static int findChangedRegion(unsigned char *src, unsigned char *dst, int width,
     for(yc = 0; yc < yCount; yc++) {
         rowBits = 0;
         for(xc = 0; xc < xCount; xc++) {
-            s = (uint32_t *)(src + ((yc * tileHeight) * pitch) + (xc * tileWidth * 2));
-            d = (uint32_t *)(dst + ((yc * tileHeight) * pitch) + (xc * tileWidth * 2));
+            s = (uint16_t *)(src + ((yc * tileHeight) * pitch) + (xc * tileWidth * 2));
+            d = (uint16_t *)(dst + ((yc * tileHeight) * pitch) + (xc * tileWidth * 2));
 
             if((yc + 1) * tileHeight > height)
                 dy = height - (yc * tileHeight);
@@ -96,7 +97,7 @@ static int findChangedRegion(unsigned char *src, unsigned char *dst, int width,
                 dy = tileHeight;
             
             for(y = 0; y < dy; y++) {
-                for(x = 0; x < tileWidth / 2; x++) {
+                for(x = 0; x < tileWidth; x++) {
                     if(s[x] != d[x]) {
                         rowBits |= (1 << xc);
                         totalChanged++;
@@ -195,25 +196,27 @@ static void copyLoop(void) {
     if(changed) {
         k = 0;
         for(i = 0; i < LCD_HEIGHT; i+= tileHeight) {
-            if(regions[k++]) {
+            if(regions[k]) {
                 j = tileHeight;
                 if(i + j > LCD_HEIGHT) 
                     j = LCD_HEIGHT - i;
-                memcpy(altscreen + i * lcdPitch, (void*)(screen + i * lcdPitch), j * lcdPitch);
+                memcpy(altscreen + i * lcdPitch, (const void*)(screen + i * lcdPitch), j * lcdPitch);
             }
+            k++;
         }
 
         pRegions = regions;
         count = 0;
         
         for(y = 0; y < LCD_HEIGHT; y += tileHeight) {
-            flags = *pRegions++;
+            flags = pRegions[0];
+            pRegions++;
             for(x = 0; x < LCD_WIDTH; x += tileWidth) {
                 if(flags & 1) {
                     lcd_drawBlock16(x, y, tileWidth, tileHeight, altscreen + (y * lcdPitch) + (x * 2));
                     count++;
-                    if(count == changed / 2)
-                        nanoSleep(4000LL);
+                    // if(count == changed / 2)
+                    //     nanoSleep(4000LL);
                 }
                 flags >>= 1;
             }
@@ -344,8 +347,8 @@ int main(int argc, char **argv) {
     csPin = 13;
     background = false;
 
-    tileWidth = 32;
-    tileHeight = 32;
+    tileWidth = 64;
+    tileHeight = 48;
 
     ParseOpts(argc, argv);
 
