@@ -189,7 +189,7 @@ void lcd_drawPixel16(uint16_t x, uint16_t y, uint16_t color) {
 }
 
 void lcd_drawBlock16(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t *bitmap) {
-    unsigned char tmp = 0x72, data[512];
+    unsigned char tmp = 0x72, data[4096];
     int pos = 0;
     lcd_setBlock(x, x + width, y, y + height);
     spi_cs(0);
@@ -198,40 +198,26 @@ void lcd_drawBlock16(uint16_t x, uint16_t y, uint16_t width, uint16_t height, ui
         data[pos] = (bitmap[i] >> 8) & 0xff;
         data[pos + 1] = bitmap[i] & 0xff;
         pos += 2;
-        if(pos == 512) {
-            spi_write(512, data);
+        if(pos == 4096) {
+            spi_write(4096, data);
             pos = 0;
         }
     }
-    spi_write(pos, data);
+    if(pos != 0)
+        spi_write(pos, data);
     spi_cs(1);
 }
 
-void lcd_drawBlock8(int x, int y, int width, int height, unsigned char *bitmap) {
-    unsigned char tmp = 0x72, data[512];
-    int pos = 0;
-    lcd_setBlock(x, x + width, y, y + height);
-    spi_cs(0);
-    spi_write(1, &tmp);
-    for(int i = 0; i < width * height; i++) {
-        data[pos] = bitmap[i];
-        pos += 2;
-        if(pos == 512) {
-            spi_write(512, data);
-            pos = 0;
-        }
-    }
-    spi_write(pos, data);
-    spi_cs(1);
-}
-
-int lcd_drawTile(int x, int y, int tileWidth, int tileHeight, unsigned char *tile, int pitch) {
+int lcd_drawTile(int x, int y, int tileWidth, int tileHeight, unsigned char *tile) {
     if(file_spi < 0) 
         return -1;
     if(tileWidth * tileHeight > 2048)
         return -1;
     
+    unsigned char tmp = 0x72, *data = malloc(tileWidth * tileHeight * 2);
 
+    free(data);
+    return 0;
 }
 
 

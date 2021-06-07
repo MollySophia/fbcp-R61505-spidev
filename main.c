@@ -165,15 +165,17 @@ static void fbCapture(void) {
             memcpy(screen, fb, fbPitch * vinfo.yres);
         }
         else {
-            uint32_t u32, *src = (uint32_t *)fb;
-            uint16_t u16, *dest = (uint16_t *)screen;
+            uint32_t u32, *src;
+            uint16_t u16, *dest;
             int x, y;
 
             for(y = 0; y < LCD_HEIGHT; y++) {
+                src = (uint32_t *)(fb + y * fbPitch);
+                dest = (uint16_t *)(screen + y * lcdPitch);
                 for(x = 0; x < LCD_WIDTH; x++) {
-                    u32 = src[x + y * LCD_WIDTH];
+                    u32 = src[0];
                     u16 = ((u32 >> 3) & 0x1f) | ((u32 >> 5) & 0x7e0) | ((u32 >> 8) & 0xf800);
-                    dest[x + y * LCD_WIDTH] = u16;
+                    dest[0] = u16;
                     src++;
                     dest++;
                 }
@@ -344,8 +346,8 @@ int main(int argc, char **argv) {
     lcdFlip = false;
     background = false;
 
-    tileWidth = 64;
-    tileHeight = 30;
+    tileWidth = 32;
+    tileHeight = 32;
 
     ParseOpts(argc, argv);
 
