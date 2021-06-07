@@ -19,7 +19,7 @@
 
 static unsigned char *screen, *altscreen;
 static unsigned char *fb;
-static int fbPitch, screenSize, bpp;
+static int fbPitch, screenSize;
 static struct fb_var_screeninfo vinfo;
 static struct fb_fix_screeninfo finfo;
 
@@ -53,8 +53,7 @@ static int initDisplay(bool lcdFlip, int spiChannel, int spiFreq, int csPin) {
         ioctl(fbfd, FBIOGET_FSCREENINFO, &finfo);
         ioctl(fbfd, FBIOGET_VSCREENINFO, &vinfo);
         screenSize = finfo.smem_len;
-        bpp = finfo.smem_len / (vinfo.xres * vinfo.yres) * 8 / 2;
-        fbPitch = (vinfo.xres * bpp) / 8;
+        fbPitch = (vinfo.xres * vinfo.bits_per_pixel) / 8;
         fb = (unsigned char *)mmap(0, screenSize, PROT_READ | PROT_WRITE, MAP_SHARED, fbfd, 0);
     }
     else {
@@ -114,37 +113,16 @@ static int findChangedRegion(unsigned char *src, unsigned char *dst, int width,
 
 static void fbCapture(void) {
     if(vinfo.xres >= LCD_WIDTH * 2) { //shrink by 1/4
-        if(bpp == 16) {
-            uint32_t *s, *d, magic, u32_1, u32_2;
+        if(vinfo.bits_per_pixel == 16) {
+            uint32_t *src, magic, u32_1, u32_2;
+            uint16_t *dest;
             int x, y;
             magic = 0xf7def7de;
 
             for(y = 0; y < LCD_HEIGHT; y++) {
-                s = (uint32_t *)(&fb[y * 2 * fbPitch]);
-                d = (uint32_t *)(&screen[y * lcdPitch]);
+                src = (uint32_t *)(fb + y * 2 * fbPitch);
+                dest = (uint16_t *)(screen + y * lcdPitch);
                 for(x = 0; x < LCD_WIDTH; x ++) {
-                    u32_1 = s[0];
-                    u32_2 = s[1];
-                    u32_1 = (u32_1 & magic) >> 1;
-                    u32_2 = (u32_2 & magic) >> 1;
-                    u32_1 += (u32_1 << 16);
-                    u32_2 += (u32_2 >> 16);
-                    u32_1 = (u32_1 >> 16) | (u32_2 << 16);
-                    d[0] = u32_1;
-                    d++;
-                    s += 2;
-                }//for x
-            }//for y
-        }
-        else { //convert to RGB565
-            uint32_t u32_1, u32_2, *src, magic = 0xf7def7de;;
-            uint16_t u16, *dest;
-            int x, y;
-
-            for(y = 0; y < LCD_HEIGHT; y++) {
-                src = (uint32_t *)&fb[fbPitch * y * 2];
-                dest = (uint16_t *)&screen[lcdPitch * y];
-                for(x = 0; x < LCD_WIDTH; x++) {
                     u32_1 = src[0];
                     u32_2 = src[1];
                     u32_1 = (u32_1 & magic) >> 1;
@@ -152,6 +130,28 @@ static void fbCapture(void) {
                     u32_1 += (u32_1 << 16);
                     u32_2 += (u32_2 >> 16);
                     u32_1 = (u32_1 >> 16) | (u32_2 << 16);
+                    dest[0] = u32_1;
+                    dest++;
+                    src += 2;
+                }//for x
+            }//for y
+        }
+        else { //convert to RGB565
+            uint32_t u32_1, u32_2, *src, magic = 0xf7def7de;
+            uint16_t u16, *dest;
+            int x, y;
+
+            for(y = 0; y < LCD_HEIGHT; y++) {
+                src = (uint32_t *)(fb + fbPitch * y * 2);
+                dest = (uint16_t *)(screen + lcdPitch * y);
+                for(x = 0; x < LCD_WIDTH; x++) {
+                    u32_1 = src[0];
+                    // u32_2 = src[1];
+                    // u32_1 = (u32_1 & magic) >> 1;
+                    // u32_2 = (u32_2 & magic) >> 1;
+                    // u32_1 += (u32_1 << 16);
+                    // u32_2 += (u32_2 >> 16);
+                    // u32_1 = (u32_1 >> 16) | (u32_2 << 16);
                     u16 = ((u32_1 >> 3) & 0x1f) | ((u32_1 >> 5) & 0x7e0) | ((u32_1 >> 8) & 0xf800);
                     dest[0] = u16;
                     src += 2;
@@ -161,7 +161,7 @@ static void fbCapture(void) {
         }
     }
     else { //1:1
-        if(bpp == 16) {
+        if(vinfo.bits_per_pixel == 16) {
             memcpy(screen, fb, fbPitch * vinfo.yres);
         }
         else {
@@ -354,13 +354,13 @@ int main(int argc, char **argv) {
         return 0;
     }
 
-    printf("/dev/fb0: %dx%d, %dbpp\n", vinfo.xres, vinfo.yres, bpp);
+    printf("/dev/fb0: %dx%d, %dvinfo.bits_per_pixel\n", vinfo.xres, vinfo.yres, vinfo.bits_per_pixel);
     printf("R: %d G: %d B: %d\n", vinfo.red, vinfo.green, vinfo.blue);
 
     if (vinfo.xres > 640)
 		printf("Warning: the framebuffer is too large and will not be copied properly; sipported sizes are 640x480 and 320x240\n");
-	if (bpp == 32)
-		printf("Warning: the framebuffer bit depth is 32-bpp, ideally it should be 16-bpp for fastest results\n");
+	if (vinfo.bits_per_pixel == 32)
+		printf("Warning: the framebuffer bit depth is 32-vinfo.bits_per_pixel, ideally it should be 16-vinfo.bits_per_pixel for fastest results\n");
 
     signal(SIGINT, signal_handler);
 
@@ -382,7 +382,7 @@ int main(int argc, char **argv) {
     }
 
 
-    //running = true;
+    running = true;
     pthread_create(&tinfo, NULL, copyThread, NULL);
 
     if(!background) {
