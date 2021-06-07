@@ -53,7 +53,7 @@ static int initDisplay(bool lcdFlip, int spiChannel, int spiFreq, int csPin) {
         ioctl(fbfd, FBIOGET_FSCREENINFO, &finfo);
         ioctl(fbfd, FBIOGET_VSCREENINFO, &vinfo);
         screenSize = finfo.smem_len;
-        bpp = finfo.smem_len / vinfo.xres / vinfo.yres;
+        bpp = finfo.smem_len / vinfo.xres / vinfo.yres * 8;
         fbPitch = (vinfo.xres * bpp) / 8;
         fb = (unsigned char *)mmap(0, screenSize, PROT_READ | PROT_WRITE, MAP_SHARED, fbfd, 0);
     }
