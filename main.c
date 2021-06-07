@@ -199,7 +199,7 @@ static void copyLoop(void) {
                 j = tileHeight;
                 if(i + j > LCD_HEIGHT) 
                     j = LCD_HEIGHT - i;
-                memcpy(&altscreen[i * lcdPitch], (void*)&screen[i * lcdPitch], j * lcdPitch);
+                memcpy(altscreen + i * lcdPitch, (void*)(screen + i * lcdPitch), j * lcdPitch);
             }
         }
 
@@ -210,7 +210,7 @@ static void copyLoop(void) {
             flags = *pRegions++;
             for(x = 0; x < LCD_WIDTH; x += tileWidth) {
                 if(flags & 1) {
-                    lcd_drawBlock16(x, y, tileWidth, tileHeight, &altscreen[(y * lcdPitch) + (x * 2)]);
+                    lcd_drawBlock16(x, y, tileWidth, tileHeight, altscreen + (y * lcdPitch) + (x * 2));
                     count++;
                     if(count == changed / 2)
                         nanoSleep(4000LL);
