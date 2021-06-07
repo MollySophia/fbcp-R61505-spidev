@@ -25,7 +25,7 @@ static struct fb_fix_screeninfo finfo;
 
 static int lcdPitch;
 static int fbfd;
-static int tileWidth, tileHeight;
+static int tileWidth, tileHeight, y_tiles, x_tiles;
 static bool running, showFPS = false, lcdFlip = false, background = false;
 static int spiChannel = 1, spiFreq = 33000000, csPin = -1;
 
@@ -220,9 +220,9 @@ static void copyLoop(void) {
         //         flags >>= 1;
         //     }
         // }
-        for(y = 0; y < LCD_HEIGHT; y += tileHeight) {
-            for(x = 0; x < LCD_WIDTH; x += tileWidth) {
-                lcd_drawBlock16(x, y, tileWidth, tileHeight, &(altscreen[y * lcdPitch + x * 2]));
+        for(y = 0; y < y_tiles; y++) {
+            for(x = 0; x < x_tiles; x++) {
+                lcd_drawBlock16(x * tileWidth, y * tileHeight, tileWidth, tileHeight, &(altscreen[y * tileHeight * lcdPitch + x * 2 * tileWidth]));
             }
         }
     }
@@ -353,6 +353,8 @@ int main(int argc, char **argv) {
 
     tileWidth = 64;
     tileHeight = 48;
+    x_tiles = (LCD_WIDTH + tileWidth - 1) / tileWidth;
+    y_tiles = (LCD_HEIGHT + tileHeight - 1) / tileHeight;
 
     ParseOpts(argc, argv);
 
