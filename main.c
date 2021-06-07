@@ -190,37 +190,35 @@ static void copyLoop(void) {
     int i, j, k, x, y, count;
 
     fbCapture();
-
-    lcd_drawBlock16(0, 0, 320, 240, screen);
     
-    // changed = findChangedRegion(screen, altscreen, LCD_WIDTH, LCD_HEIGHT, lcdPitch, tileWidth, tileHeight, regions);
-    // if(changed) {
-    //     k = 0;
-    //     for(i = 0; i < LCD_HEIGHT; i+= tileHeight) {
-    //         if(regions[k++]) {
-    //             j = tileHeight;
-    //             if(i + j > LCD_HEIGHT) 
-    //                 j = LCD_HEIGHT - i;
-    //             memcpy(&altscreen[i * lcdPitch], (void*)&screen[i * lcdPitch], j * lcdPitch);
-    //         }
-    //     }
+    changed = findChangedRegion(screen, altscreen, LCD_WIDTH, LCD_HEIGHT, lcdPitch, tileWidth, tileHeight, regions);
+    if(changed) {
+        k = 0;
+        for(i = 0; i < LCD_HEIGHT; i+= tileHeight) {
+            if(regions[k++]) {
+                j = tileHeight;
+                if(i + j > LCD_HEIGHT) 
+                    j = LCD_HEIGHT - i;
+                memcpy(&altscreen[i * lcdPitch], (void*)&screen[i * lcdPitch], j * lcdPitch);
+            }
+        }
 
-    //     pRegions = regions;
-    //     count = 0;
+        pRegions = regions;
+        count = 0;
         
-    //     for(y = 0; y < LCD_HEIGHT; y += tileHeight) {
-    //         flags = *pRegions++;
-    //         for(x = 0; x < LCD_WIDTH; x += tileWidth) {
-    //             if(flags & 1) {
-    //                 lcd_drawBlock8(x, y, tileWidth, tileHeight, &altscreen[(y * lcdPitch) + (x * 2)]);
-    //                 count++;
-    //                 if(count == changed / 2)
-    //                     nanoSleep(4000LL);
-    //             }
-    //             flags >>= 1;
-    //         }
-    //     }
-    // }
+        for(y = 0; y < LCD_HEIGHT; y += tileHeight) {
+            flags = *pRegions++;
+            for(x = 0; x < LCD_WIDTH; x += tileWidth) {
+                if(flags & 1) {
+                    lcd_drawBlock8(x, y, tileWidth, tileHeight, &altscreen[(y * lcdPitch) + (x * 2)]);
+                    count++;
+                    if(count == changed / 2)
+                        nanoSleep(4000LL);
+                }
+                flags >>= 1;
+            }
+        }
+    }
 }
 
 static int ParseOpts(int argc, char *argv[]) {
@@ -258,7 +256,10 @@ static int ParseOpts(int argc, char *argv[]) {
         } else if(0 == strcmp("--lcd_cs", argv[i])) {
             csPin = atoi(argv[i+1]);
             i += 2;
-        } 
+        } else if(0 == strcmp("--help", argv[i])) {
+            ShowHelp();
+            return 0;
+        }
         else {
             fprintf(stderr, "Unknown parameter '%s'\n", argv[i]);
             exit(1);
@@ -276,7 +277,8 @@ static void ShowHelp(void) {
         " --lcd_cs <pin number>    defaults to 13\n"
         " --flip                   flips display 180 degrees\n"
         " --showfps                Show framerate\n"
-	" --background             suppress printf output if running as a bkgd process\n"
+	    " --background             suppress printf output if running as a bkgd process\n"
+        " --help                   print help\n"
     );
 } /* ShowHelp() */
 
@@ -335,15 +337,11 @@ int main(int argc, char **argv) {
     int i;
     pthread_t tinfo;
 
-    if(argc < 2) {
-        ShowHelp();
-        return 0;
-    }
-
     showFPS = false;
     spiChannel = 1;
-    spiFreq = 33000000;
+    spiFreq = 48000000;
     lcdFlip = false;
+    csPin = 13;
     background = false;
 
     tileWidth = 32;
