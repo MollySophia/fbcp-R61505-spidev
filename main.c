@@ -113,7 +113,7 @@ static int findChangedRegion(unsigned char *src, unsigned char *dst, int width,
 
 static void fbCapture(void) {
     if(vinfo.xres >= LCD_WIDTH * 2) { //shrink by 1/4
-        if(vinfo.bits_per_pixel == 16) {
+        if(vinfo.bits_per_pixel == 32) {
             uint32_t *s, *d, magic, u32_1, u32_2;
             int x, y;
             magic = 0xf7def7de;
@@ -152,7 +152,7 @@ static void fbCapture(void) {
         }
     }
     else { //1:1
-        if(vinfo.bits_per_pixel == 16) {
+        if(vinfo.bits_per_pixel == 32) {
             memcpy(screen, fb, fbPitch * vinfo.yres);
         }
         else {
