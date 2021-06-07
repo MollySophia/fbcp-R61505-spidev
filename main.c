@@ -199,7 +199,7 @@ static void copyLoop(void) {
             flags = *pRegions++;
             for(x = 0; x < LCD_WIDTH; x += tileWidth) {
                 if(flags & 1) {
-                    lcd_drawBlock(x, y, tileWidth, tileHeight, &altscreen[(y * lcdPitch) + (x * 2)]);
+                    lcd_drawBlock8(x, y, tileWidth, tileHeight, &altscreen[(y * lcdPitch) + (x * 2)]);
                     count++;
                     if(count == changed / 2)
                         nanoSleep(4000LL);

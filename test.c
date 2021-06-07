@@ -7,8 +7,9 @@
 uint16_t buf[320 * 240];
 
 void main(void) {
-    memset(buf, 0x0000, sizeof(buf));
+    for(int i = 0; i < 320*240; i++)
+        buf[i] = 0xfa00;
 
     lcd_init(0, 48000000, 1, 13);
-    lcd_drawBlock(0, 0, 320, 240, buf);
+    lcd_drawBlock16(0, 0, 320, 240, buf);
 }

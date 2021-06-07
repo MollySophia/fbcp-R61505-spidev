@@ -116,39 +116,40 @@ int lcd_init(bool flipped, int spi_freq, int channel, int cs) {
     lcd_writeREG(0x0000,0x0000);
     lcd_writeREG(0x0000,0x0000);
     lcd_writeREG(0x0000,0x0001);
-    lcd_writeREG(0x00A4,0x0001);  //CALB=1
+    lcd_writeREG(0x00A4,0x0001);  //CALB=1      //NVM Control 4
         usleep(10000);
-    lcd_writeREG(0x0060,0x2700);  //NL
-    lcd_writeREG(0x0008,0x0808);  //FP & BP
-    lcd_writeREG(0x0030,0x0214);  //Gamma settings
-    lcd_writeREG(0x0031,0x3715);
-    lcd_writeREG(0x0032,0x0604);
-    lcd_writeREG(0x0033,0x0E16);
-    lcd_writeREG(0x0034,0x2211);
-    lcd_writeREG(0x0035,0x1500);
-    lcd_writeREG(0x0036,0x8507);
-    lcd_writeREG(0x0037,0x1407);
-    lcd_writeREG(0x0038,0x1403);
-    lcd_writeREG(0x0039,0x0020);
+    lcd_writeREG(0x0060,0x2700);  //NL          //Driver Output Control
+    lcd_writeREG(0x0008,0x0808);  //FP & BP     //Display Control 2
 
-    lcd_writeREG(0x0090,0x0015);  //DIVI & RTNI
-    lcd_writeREG(0x0010,0x0410);  //BT,AP
-    lcd_writeREG(0x0011,0x0237);  //VC,DC0,DC1
+    lcd_writeREG(0x0030,0x0214);                //Gamma Control 1
+    lcd_writeREG(0x0031,0x3715);                //Gamma Control 2
+    lcd_writeREG(0x0032,0x0604);                //Gamma Control 3
+    lcd_writeREG(0x0033,0x0E16);                //Gamma Control 4
+    lcd_writeREG(0x0034,0x2211);                //Gamma Control 5
+    lcd_writeREG(0x0035,0x1500);                //Gamma Control 6
+    lcd_writeREG(0x0036,0x8507);                //Gamma Control 7
+    lcd_writeREG(0x0037,0x1407);                //Gamma Control 8
+    lcd_writeREG(0x0038,0x1403);                //Gamma Control 9
+    lcd_writeREG(0x0039,0x0020);                //Gamma Control 10
 
-    lcd_writeREG(0x0029,0x0046);  //VCM1
-    lcd_writeREG(0x002A,0x0046);  //VCMSEL,VCM2
-    lcd_writeREG(0x0007,0x0000);
+    lcd_writeREG(0x0090,0x0015);  //DIVI & RTNI //Panel Interface Control 1
+    lcd_writeREG(0x0010,0x0410);  //BT,AP       //Power Control 1
+    lcd_writeREG(0x0011,0x0237);  //VC,DC0,DC1  //Power Control 2
 
-    lcd_writeREG(0x0012,0x0189);  //VRH,VCMR,PSON=0,PON=0
-    lcd_writeREG(0x0013,0x1100);  //VDV
+    lcd_writeREG(0x0029,0x0046);  //VCM1        //NVM Data Read 2
+    lcd_writeREG(0x002A,0x0046);  //VCMSEL,VCM2 //NVM Data Read 3
+    lcd_writeREG(0x0007,0x0000);                //Display Control 1
+
+    lcd_writeREG(0x0012,0x0189);  //VRH,VCMR,PSON=0,PON=0   //Power Control 3
+    lcd_writeREG(0x0013,0x1100);  //VDV                     //Power Control 4
         usleep(150000);
-    lcd_writeREG(0x0012,0x01B9);  //PSON=1,PON=1
-    lcd_writeREG(0x0001,0x0000);  //Other mode settings
-    lcd_writeREG(0x0002,0x0200);  //BC0=1--Line inversion
-    lcd_writeREG(0x0003,0x1038);
-    lcd_writeREG(0x0009,0x0001);
-    lcd_writeREG(0x000A,0x0000);
-    lcd_writeREG(0x000D,0x0000);
+    lcd_writeREG(0x0012,0x01B9);  //PSON=1,PON=1            //Power Control 3
+    lcd_writeREG(0x0001,0x0000);  //Other mode settings     //Driver Output Control
+    lcd_writeREG(0x0002,0x0200);  //BC0=1--Line inversion   //LCD Driving Wave Control
+    lcd_writeREG(0x0003,0x1038);                //Entry Mode
+    lcd_writeREG(0x0009,0x0001);                //Display Control 3
+    lcd_writeREG(0x000A,0x0000);                //Display Control 4
+    lcd_writeREG(0x000D,0x0000);                
     lcd_writeREG(0x000E,0x0030);  //VCOM equalize
     lcd_writeREG(0x0050,0x0000);  //Display window area setting
     lcd_writeREG(0x0051,0x00EF);
@@ -182,20 +183,38 @@ static void lcd_setBlock(unsigned int x_start, unsigned int x_end, unsigned int 
     lcd_writeCMD(0x22);
 }
 
-void lcd_drawPixel(uint16_t x, uint16_t y, uint16_t color) {
+void lcd_drawPixel16(uint16_t x, uint16_t y, uint16_t color) {
     lcd_setBlock(x, x, y, y);
     lcd_writeDATA16(color);
 }
 
-void lcd_drawBlock(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t *bitmap) {
+void lcd_drawBlock16(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t *bitmap) {
     unsigned char tmp = 0x72, data[512];
     int pos = 0;
     lcd_setBlock(x, x + width, y, y + height);
     spi_cs(0);
     spi_write(1, &tmp);
     for(int i = 0; i < width * height; i++) {
-        data[pos] = (bitmap[i] >> 8) & 0xff;
-        data[pos + 1] = bitmap[i] & 0xff;
+        data[pos + 1] = (bitmap[i] >> 8) & 0xff;
+        data[pos] = bitmap[i] & 0xff;
+        pos += 2;
+        if(pos == 512) {
+            spi_write(512, data);
+            pos = 0;
+        }
+    }
+    spi_write(pos, data);
+    spi_cs(1);
+}
+
+void lcd_drawBlock8(int x, int y, int width, int height, unsigned char *bitmap) {
+    unsigned char tmp = 0x72, data[512];
+    int pos = 0;
+    lcd_setBlock(x, x + width, y, y + height);
+    spi_cs(0);
+    spi_write(1, &tmp);
+    for(int i = 0; i < width * height; i++) {
+        data[pos] = bitmap[i];
         pos += 2;
         if(pos == 512) {
             spi_write(512, data);
@@ -211,7 +230,8 @@ int lcd_drawTile(int x, int y, int tileWidth, int tileHeight, unsigned char *til
         return -1;
     if(tileWidth * tileHeight > 2048)
         return -1;
-        
+    
+
 }
 
 
