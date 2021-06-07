@@ -285,7 +285,7 @@ void *copyThread(void *arg) {
             fps = (float)videoFrames;
             fps = fps * 1000000000.0;
             fps = fps / (float)(time - oldTime);
-            //if(!background)
+            if(background == false)
                 printf("%02.1f FPS\n", fps);
             videoFrames = 0;
             oldTime = time;
@@ -344,6 +344,7 @@ int main(int argc, char **argv) {
     }
 
     printf("/dev/fb0: %dx%d, %dbpp\n", vinfo.xres, vinfo.yres, vinfo.bits_per_pixel);
+    printf("R: %d G: %d B: %d\n", vinfo.red, vinfo.blue, vinfo.green);
 
     if (vinfo.xres > 640)
 		printf("Warning: the framebuffer is too large and will not be copied properly; sipported sizes are 640x480 and 320x240\n");
