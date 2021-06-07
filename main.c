@@ -191,36 +191,37 @@ static void copyLoop(void) {
     int i, j, k, x, y, count;
 
     fbCapture();
-    
-    changed = findChangedRegion(screen, altscreen, LCD_WIDTH, LCD_HEIGHT, lcdPitch, tileWidth, tileHeight, regions);
-    if(changed) {
-        printf("Changed tiles: %d\n", changed);
-        k = 0;
-        for(i = 0; i < LCD_HEIGHT; i+= tileHeight) {
-            if(regions[k]) {
-                j = tileHeight;
-                if(i + j > LCD_HEIGHT) 
-                    j = LCD_HEIGHT - i;
-                memcpy(altscreen + i * lcdPitch, (const void*)(screen + i * lcdPitch), j * lcdPitch);
-            }
-            k++;
-        }
 
-        pRegions = regions;
-        count = 0;
+    lcd_drawBlock16(0, 0, 320, 240, screen);
+    
+    // changed = findChangedRegion(screen, altscreen, LCD_WIDTH, LCD_HEIGHT, lcdPitch, tileWidth, tileHeight, regions);
+    // if(changed) {
+    //     printf("Changed tiles: %d\n", changed);
+    //     k = 0;
+    //     for(i = 0; i < LCD_HEIGHT; i+= tileHeight) {
+    //         if(regions[k]) {
+    //             j = tileHeight;
+    //             if(i + j > LCD_HEIGHT) 
+    //                 j = LCD_HEIGHT - i;
+    //             memcpy(altscreen + i * lcdPitch, (const void*)(screen + i * lcdPitch), j * lcdPitch);
+    //         }
+    //         k++;
+    //     }
+
+    //     pRegions = regions;
+    //     count = 0;
         
-        for(y = 0; y < LCD_HEIGHT; y += tileHeight) {
-            flags = pRegions[0];
-            pRegions++;
-            for(x = 0; x < LCD_WIDTH; x += tileWidth) {
-                if((flags & 1) != 0) {
-                    lcd_drawBlock16(x, y, tileWidth, tileHeight, (uint16_t *)(altscreen + (y * lcdPitch + x * 2)));
-                    nanoSleep(40000LL);
-                }
-                flags >>= 1;
-            }
-        }
-    }
+    //     for(y = 0; y < LCD_HEIGHT; y += tileHeight) {
+    //         flags = pRegions[0];
+    //         pRegions++;
+    //         for(x = 0; x < LCD_WIDTH; x += tileWidth) {
+    //             if((flags & 1) != 0) {
+    //                 lcd_drawBlock16(x, y, tileWidth, tileHeight, (uint16_t *)(altscreen + (y * lcdPitch + x * 2)));
+    //             }
+    //             flags >>= 1;
+    //         }
+    //     }
+    // }
 }
 
 static void ShowHelp(void) {
