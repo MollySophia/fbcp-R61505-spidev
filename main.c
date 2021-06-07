@@ -170,8 +170,8 @@ static void fbCapture(void) {
             int x, y;
 
             for(y = 0; y < LCD_HEIGHT; y++) {
-                src = (uint32_t *)&fb[fbPitch * y];
-                dest = (uint16_t *)&screen[lcdPitch * y];
+                src = (uint32_t *)(fb + y * fbPitch);
+                dest = (uint16_t *)(screen + y * lcdPitch);
                 for(x = 0; x < LCD_WIDTH; x++) {
                     u32 = *src++;
                     u16 = ((u32 >> 3) & 0x1f) | ((u32 >> 5) & 0x7e0) | ((u32 >> 8) & 0xf800);
