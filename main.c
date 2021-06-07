@@ -179,35 +179,37 @@ static void copyLoop(void) {
     int i, j, k, x, y, count;
 
     fbCapture();
-    
-    changed = findChangedRegion(screen, altscreen, LCD_WIDTH, LCD_HEIGHT, lcdPitch, tileWidth, tileHeight, regions);
-    if(changed) {
-        k = 0;
-        for(i = 0; i < LCD_HEIGHT; i+= tileHeight) {
-            if(regions[k++]) {
-                j = tileHeight;
-                if(i + j > LCD_HEIGHT) 
-                    j = LCD_HEIGHT - i;
-                memcpy(&altscreen[i * lcdPitch], (void*)&screen[i * lcdPitch], j * lcdPitch);
-            }
-        }
 
-        pRegions = regions;
-        count = 0;
+    lcd_drawBlock16(0, 0, 320, 240, screen);
+    
+    // changed = findChangedRegion(screen, altscreen, LCD_WIDTH, LCD_HEIGHT, lcdPitch, tileWidth, tileHeight, regions);
+    // if(changed) {
+    //     k = 0;
+    //     for(i = 0; i < LCD_HEIGHT; i+= tileHeight) {
+    //         if(regions[k++]) {
+    //             j = tileHeight;
+    //             if(i + j > LCD_HEIGHT) 
+    //                 j = LCD_HEIGHT - i;
+    //             memcpy(&altscreen[i * lcdPitch], (void*)&screen[i * lcdPitch], j * lcdPitch);
+    //         }
+    //     }
+
+    //     pRegions = regions;
+    //     count = 0;
         
-        for(y = 0; y < LCD_HEIGHT; y += tileHeight) {
-            flags = *pRegions++;
-            for(x = 0; x < LCD_WIDTH; x += tileWidth) {
-                if(flags & 1) {
-                    lcd_drawBlock8(x, y, tileWidth, tileHeight, &altscreen[(y * lcdPitch) + (x * 2)]);
-                    count++;
-                    if(count == changed / 2)
-                        nanoSleep(4000LL);
-                }
-                flags >>= 1;
-            }
-        }
-    }
+    //     for(y = 0; y < LCD_HEIGHT; y += tileHeight) {
+    //         flags = *pRegions++;
+    //         for(x = 0; x < LCD_WIDTH; x += tileWidth) {
+    //             if(flags & 1) {
+    //                 lcd_drawBlock8(x, y, tileWidth, tileHeight, &altscreen[(y * lcdPitch) + (x * 2)]);
+    //                 count++;
+    //                 if(count == changed / 2)
+    //                     nanoSleep(4000LL);
+    //             }
+    //             flags >>= 1;
+    //         }
+    //     }
+    // }
 }
 
 static int ParseOpts(int argc, char *argv[]) {
@@ -344,7 +346,7 @@ int main(int argc, char **argv) {
     }
 
     printf("/dev/fb0: %dx%d, %dbpp\n", vinfo.xres, vinfo.yres, vinfo.bits_per_pixel);
-    printf("R: %d G: %d B: %d\n", vinfo.red, vinfo.blue, vinfo.green);
+    printf("R: %d G: %d B: %d\n", vinfo.red, vinfo.green, vinfo.blue);
 
     if (vinfo.xres > 640)
 		printf("Warning: the framebuffer is too large and will not be copied properly; sipported sizes are 640x480 and 320x240\n");
