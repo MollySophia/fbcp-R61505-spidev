@@ -19,7 +19,7 @@
 
 static unsigned char *screen, *altscreen;
 static unsigned char *fb;
-static int fbPitch, screenSize;
+static int fbPitch, screenSize, bpp;
 static struct fb_var_screeninfo vinfo;
 static struct fb_fix_screeninfo finfo;
 
@@ -53,7 +53,8 @@ static int initDisplay(bool lcdFlip, int spiChannel, int spiFreq, int csPin) {
         ioctl(fbfd, FBIOGET_FSCREENINFO, &finfo);
         ioctl(fbfd, FBIOGET_VSCREENINFO, &vinfo);
         screenSize = finfo.smem_len;
-        fbPitch = (vinfo.xres * vinfo.bits_per_pixel) / 8;
+        bpp = finfo.smem_len / (vinfo.xres * vinfo.yres) * 8 / 2;
+        fbPitch = (vinfo.xres * bpp) / 8;
         fb = (unsigned char *)mmap(0, screenSize, PROT_READ | PROT_WRITE, MAP_SHARED, fbfd, 0);
     }
     else {
@@ -113,7 +114,7 @@ static int findChangedRegion(unsigned char *src, unsigned char *dst, int width,
 
 static void fbCapture(void) {
     if(vinfo.xres >= LCD_WIDTH * 2) { //shrink by 1/4
-        if(vinfo.bits_per_pixel == 16) {
+        if(bpp == 16) {
             uint32_t *s, *d, magic, u32_1, u32_2;
             int x, y;
             magic = 0xf7def7de;
@@ -160,7 +161,7 @@ static void fbCapture(void) {
         }
     }
     else { //1:1
-        if(vinfo.bits_per_pixel == 16) {
+        if(bpp == 16) {
             memcpy(screen, fb, fbPitch * vinfo.yres);
         }
         else {
@@ -353,13 +354,13 @@ int main(int argc, char **argv) {
         return 0;
     }
 
-    printf("/dev/fb0: %dx%d, %dvinfo.bits_per_pixel\n", vinfo.xres, vinfo.yres, vinfo.bits_per_pixel);
+    printf("/dev/fb0: %dx%d, %dbpp\n", vinfo.xres, vinfo.yres, bpp);
     printf("R: %d G: %d B: %d\n", vinfo.red, vinfo.green, vinfo.blue);
 
     if (vinfo.xres > 640)
 		printf("Warning: the framebuffer is too large and will not be copied properly; sipported sizes are 640x480 and 320x240\n");
-	if (vinfo.bits_per_pixel == 32)
-		printf("Warning: the framebuffer bit depth is 32-vinfo.bits_per_pixel, ideally it should be 16-vinfo.bits_per_pixel for fastest results\n");
+	if (bpp == 32)
+		printf("Warning: the framebuffer bit depth is 32-bpp, ideally it should be 16-bpp for fastest results\n");
 
     signal(SIGINT, signal_handler);
 
