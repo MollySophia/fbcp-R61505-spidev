@@ -193,8 +193,8 @@ static void copyLoop(void) {
     fbCapture();
     
     changed = findChangedRegion(screen, altscreen, LCD_WIDTH, LCD_HEIGHT, lcdPitch, tileWidth, tileHeight, regions);
-    printf("Changed tiles: %d\n", changed);
     if(changed) {
+        printf("Changed tiles: %d\n", changed);
         k = 0;
         for(i = 0; i < LCD_HEIGHT; i+= tileHeight) {
             if(regions[k]) {
@@ -214,10 +214,7 @@ static void copyLoop(void) {
             pRegions++;
             for(x = 0; x < LCD_WIDTH; x += tileWidth) {
                 if((flags & 1) != 0) {
-                    lcd_drawBlock16(x, y, tileWidth, tileHeight, altscreen + (y * lcdPitch + x * 2));
-                    nanoSleep(4000LL);
-                    // if(count == changed / 2)
-                    //     nanoSleep(4000LL);
+                    lcd_drawBlock16(x, y, tileWidth, tileHeight, (uint16_t *)(altscreen + (y * lcdPitch + x * 2)));
                 }
                 flags >>= 1;
             }
