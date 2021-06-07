@@ -87,8 +87,8 @@ static int findChangedRegion(unsigned char *src, unsigned char *dst, int width,
     for(yc = 0; yc < yCount; yc++) {
         rowBits = 0;
         for(xc = 0; xc < xCount; xc++) {
-            s = (uint32_t *)&src[((yc * tileHeight) * pitch) + (xc * tileWidth * 2)];
-            d = (uint32_t *)&dst[((yc * tileHeight) * pitch) + (xc * tileWidth * 2)];
+            s = (uint32_t *)(src + ((yc * tileHeight) * pitch) + (xc * tileWidth * 2));
+            d = (uint32_t *)(dst + ((yc * tileHeight) * pitch) + (xc * tileWidth * 2));
 
             if((yc + 1) * tileHeight > height)
                 dy = height - (yc * tileHeight);
