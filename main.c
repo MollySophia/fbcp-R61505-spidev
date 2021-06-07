@@ -205,24 +205,19 @@ static void copyLoop(void) {
             k++;
         }
 
-        // pRegions = regions;
-        // count = 0;
+        pRegions = regions;
+        count = 0;
         
-        // for(y = 0; y < LCD_HEIGHT; y += tileHeight) {
-        //     flags = pRegions[0];
-        //     pRegions++;
-        //     for(x = 0; x < LCD_WIDTH; x += tileWidth) {
-        //         if((flags & 1) != 0) {
-        //             lcd_drawBlock16(x, y, tileWidth, tileHeight, altscreen + (y * lcdPitch) + (x * 2));
-        //             // if(count == changed / 2)
-        //             //     nanoSleep(4000LL);
-        //         }
-        //         flags >>= 1;
-        //     }
-        // }
-        for(y = 0; y < y_tiles; y++) {
-            for(x = 0; x < x_tiles; x++) {
-                lcd_drawBlock16(x * tileWidth, y * tileHeight, tileWidth, tileHeight, &(altscreen[y * tileHeight * lcdPitch + x * 2 * tileWidth]));
+        for(y = 0; y < LCD_HEIGHT; y += tileHeight) {
+            flags = pRegions[0];
+            pRegions++;
+            for(x = 0; x < LCD_WIDTH; x += tileWidth) {
+                if((flags & 1) != 0) {
+                    lcd_drawBlock16(x, y, tileWidth, tileHeight, altscreen + (y * lcdPitch + x * 2));
+                    // if(count == changed / 2)
+                    //     nanoSleep(4000LL);
+                }
+                flags >>= 1;
             }
         }
     }
