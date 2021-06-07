@@ -332,6 +332,7 @@ int main(int argc, char **argv) {
     spiFreq = 33000000;
     lcdFlip = false;
     background = false;
+    running = true;
 
     tileWidth = 64;
     tileHeight = 30;
