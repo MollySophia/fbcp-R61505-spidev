@@ -137,7 +137,7 @@ static void fbCapture(void) {
             }//for y
         }
         else { //convert to RGB565
-            uint32_t u32, *src;
+            uint32_t u32_1, u32_2, *src, magic = 0xf7def7de;;
             uint16_t u16, *dest;
             int x, y;
 
@@ -145,8 +145,14 @@ static void fbCapture(void) {
                 src = (uint32_t *)&fb[fbPitch * y * 2];
                 dest = (uint16_t *)&screen[lcdPitch * y];
                 for(x = 0; x < LCD_WIDTH; x++) {
-                    u32 = src[0];
-                    u16 = ((u32 >> 3) & 0x1f) | ((u32 >> 5) & 0x7e0) | ((u32 >> 8) & 0xf800);
+                    u32_1 = src[0];
+                    u32_2 = src[1];
+                    u32_1 = (u32_1 & magic) >> 1;
+                    u32_2 = (u32_2 & magic) >> 1;
+                    u32_1 += (u32_1 << 16);
+                    u32_2 += (u32_2 >> 16);
+                    u32_1 = (u32_1 >> 16) | (u32_2 << 16);
+                    u16 = ((u32_1 >> 3) & 0x1f) | ((u32_1 >> 5) & 0x7e0) | ((u32_1 >> 8) & 0xf800);
                     dest[0] = u16;
                     src += 2;
                     dest++;
