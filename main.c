@@ -25,7 +25,7 @@ static struct fb_fix_screeninfo finfo;
 
 static int lcdPitch;
 static int fbfd;
-static int tileWidth, tileHeight, y_tiles, x_tiles;
+static int tileWidth, tileHeight;
 static bool running, showFPS = false, lcdFlip = false, background = false;
 static int spiChannel = 1, spiFreq = 33000000, csPin = -1;
 
@@ -91,7 +91,7 @@ static int findChangedRegion(unsigned char *src, unsigned char *dst, int width,
             s = (uint16_t *)(src + ((yc * tileHeight) * pitch) + (xc * tileWidth * 2));
             d = (uint16_t *)(dst + ((yc * tileHeight) * pitch) + (xc * tileWidth * 2));
 
-            if((yc + 1) * tileHeight >= height)
+            if((yc + 1) * tileHeight > height)
                 dy = height - (yc * tileHeight);
             else
                 dy = tileHeight;
@@ -191,37 +191,38 @@ static void copyLoop(void) {
     int i, j, k, x, y, count;
 
     fbCapture();
-
-    lcd_drawBlock16(0, 0, 320, 240, screen);
     
-    // changed = findChangedRegion(screen, altscreen, LCD_WIDTH, LCD_HEIGHT, lcdPitch, tileWidth, tileHeight, regions);
-    // if(changed) {
-    //     printf("Changed tiles: %d\n", changed);
-    //     k = 0;
-    //     for(i = 0; i < LCD_HEIGHT; i+= tileHeight) {
-    //         if(regions[k]) {
-    //             j = tileHeight;
-    //             if(i + j > LCD_HEIGHT) 
-    //                 j = LCD_HEIGHT - i;
-    //             memcpy(altscreen + i * lcdPitch, (const void*)(screen + i * lcdPitch), j * lcdPitch);
-    //         }
-    //         k++;
-    //     }
+    changed = findChangedRegion(screen, altscreen, LCD_WIDTH, LCD_HEIGHT, lcdPitch, tileWidth, tileHeight, regions);
+    if(changed) {
+        k = 0;
+        for(i = 0; i < LCD_HEIGHT; i+= tileHeight) {
+            if(regions[k]) {
+                j = tileHeight;
+                if(i + j > LCD_HEIGHT) 
+                    j = LCD_HEIGHT - i;
+                memcpy(altscreen + i * lcdPitch, (const void*)(screen + i * lcdPitch), j * lcdPitch);
+            }
+            k++;
+        }
 
-    //     pRegions = regions;
-    //     count = 0;
+        // pRegions = regions;
+        // count = 0;
         
-    //     for(y = 0; y < LCD_HEIGHT; y += tileHeight) {
-    //         flags = pRegions[0];
-    //         pRegions++;
-    //         for(x = 0; x < LCD_WIDTH; x += tileWidth) {
-    //             if((flags & 1) != 0) {
-    //                 lcd_drawBlock16(x, y, tileWidth, tileHeight, (uint16_t *)(altscreen + (y * lcdPitch + x * 2)));
-    //             }
-    //             flags >>= 1;
-    //         }
-    //     }
-    // }
+        // for(y = 0; y < LCD_HEIGHT; y += tileHeight) {
+        //     flags = pRegions[0];
+        //     pRegions++;
+        //     for(x = 0; x < LCD_WIDTH; x += tileWidth) {
+        //         if(flags & 1) {
+        //             lcd_drawBlock16(x, y, tileWidth, tileHeight, altscreen + (y * lcdPitch) + (x * 2));
+        //             count++;
+        //             // if(count == changed / 2)
+        //             //     nanoSleep(4000LL);
+        //         }
+        //         flags >>= 1;
+        //     }
+        // }
+        lcd_drawBlock16(0, 0, 320, 240, altscreen);
+    }
 }
 
 static void ShowHelp(void) {
@@ -342,15 +343,13 @@ int main(int argc, char **argv) {
 
     showFPS = false;
     spiChannel = 1;
-    spiFreq = 48000000;
+    spiFreq = 33000000;
     lcdFlip = false;
     csPin = 13;
     background = false;
 
     tileWidth = 64;
     tileHeight = 48;
-    x_tiles = (LCD_WIDTH + tileWidth - 1) / tileWidth;
-    y_tiles = (LCD_HEIGHT + tileHeight - 1) / tileHeight;
 
     ParseOpts(argc, argv);
 
