@@ -200,7 +200,7 @@ static void copyLoop(void) {
                 j = tileHeight;
                 if(i + j > LCD_HEIGHT) 
                     j = LCD_HEIGHT - i;
-                memcpy(altscreen + i * lcdPitch, (const void*)(screen + i * lcdPitch), j * lcdPitch);
+                memcpy(altscreen + i * lcdPitch, (void*)(screen + i * lcdPitch), j * lcdPitch);
             }
             k++;
         }
@@ -359,12 +359,11 @@ int main(int argc, char **argv) {
     }
 
     printf("/dev/fb0: %dx%d, %dvinfo.bits_per_pixel\n", vinfo.xres, vinfo.yres, vinfo.bits_per_pixel);
-    printf("R: %d G: %d B: %d\n", vinfo.red, vinfo.green, vinfo.blue);
 
     if (vinfo.xres > 640)
 		printf("Warning: the framebuffer is too large and will not be copied properly; sipported sizes are 640x480 and 320x240\n");
 	if (vinfo.bits_per_pixel == 32)
-		printf("Warning: the framebuffer bit depth is 32-vinfo.bits_per_pixel, ideally it should be 16-vinfo.bits_per_pixel for fastest results\n");
+		printf("Warning: the framebuffer bit depth is 32-bpp, ideally it should be 16-bpp for fastest results\n");
 
     signal(SIGINT, signal_handler);
 
