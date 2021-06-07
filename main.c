@@ -91,7 +91,7 @@ static int findChangedRegion(unsigned char *src, unsigned char *dst, int width,
             s = (uint16_t *)(src + ((yc * tileHeight) * pitch) + (xc * tileWidth * 2));
             d = (uint16_t *)(dst + ((yc * tileHeight) * pitch) + (xc * tileWidth * 2));
 
-            if((yc + 1) * tileHeight > height)
+            if((yc + 1) * tileHeight >= height)
                 dy = height - (yc * tileHeight);
             else
                 dy = tileHeight;
@@ -215,6 +215,7 @@ static void copyLoop(void) {
             for(x = 0; x < LCD_WIDTH; x += tileWidth) {
                 if((flags & 1) != 0) {
                     lcd_drawBlock16(x, y, tileWidth, tileHeight, (uint16_t *)(altscreen + (y * lcdPitch + x * 2)));
+                    nanoSleep(40000LL);
                 }
                 flags >>= 1;
             }
