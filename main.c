@@ -120,9 +120,9 @@ static void fbCapture(void) {
             magic = 0xf7def7de;
 
             for(y = 0; y < LCD_HEIGHT; y++) {
-                s = (uint32_t *)&fb[y * 2 * fbPitch];
-                d = (uint32_t *)&screen[y * lcdPitch];
-                for(x = 0; x < LCD_WIDTH; x += 2) {
+                s = (uint32_t *)(&fb[y * 2 * fbPitch]);
+                d = (uint32_t *)(&screen[y * lcdPitch]);
+                for(x = 0; x < LCD_WIDTH; x ++) {
                     u32_1 = s[0];
                     u32_2 = s[1];
                     u32_1 = (u32_1 & magic) >> 1;
@@ -130,7 +130,8 @@ static void fbCapture(void) {
                     u32_1 += (u32_1 << 16);
                     u32_2 += (u32_2 >> 16);
                     u32_1 = (u32_1 >> 16) | (u32_2 << 16);
-                    *d++ = u32_1;
+                    d[0] = u32_1;
+                    d++;
                     s += 2;
                 }//for x
             }//for y
@@ -145,9 +146,10 @@ static void fbCapture(void) {
                 dest = (uint16_t *)&screen[lcdPitch * y];
                 for(x = 0; x < LCD_WIDTH; x++) {
                     u32 = src[0];
-                    src += 2;
                     u16 = ((u32 >> 3) & 0x1f) | ((u32 >> 5) & 0x7e0) | ((u32 >> 8) & 0xf800);
-                    *dest++ = u16;
+                    dest[0] = u16;
+                    src += 2;
+                    dest++;
                 }
             }
         }
@@ -181,36 +183,36 @@ static void copyLoop(void) {
 
     fbCapture();
 
-    lcd_drawBlock16(0, 0, 320, 240, screen);
+    //lcd_drawBlock16(0, 0, 320, 240, screen);
     
-    // changed = findChangedRegion(screen, altscreen, LCD_WIDTH, LCD_HEIGHT, lcdPitch, tileWidth, tileHeight, regions);
-    // if(changed) {
-    //     k = 0;
-    //     for(i = 0; i < LCD_HEIGHT; i+= tileHeight) {
-    //         if(regions[k++]) {
-    //             j = tileHeight;
-    //             if(i + j > LCD_HEIGHT) 
-    //                 j = LCD_HEIGHT - i;
-    //             memcpy(&altscreen[i * lcdPitch], (void*)&screen[i * lcdPitch], j * lcdPitch);
-    //         }
-    //     }
+    changed = findChangedRegion(screen, altscreen, LCD_WIDTH, LCD_HEIGHT, lcdPitch, tileWidth, tileHeight, regions);
+    if(changed) {
+        k = 0;
+        for(i = 0; i < LCD_HEIGHT; i+= tileHeight) {
+            if(regions[k++]) {
+                j = tileHeight;
+                if(i + j > LCD_HEIGHT) 
+                    j = LCD_HEIGHT - i;
+                memcpy(&altscreen[i * lcdPitch], (void*)&screen[i * lcdPitch], j * lcdPitch);
+            }
+        }
 
-    //     pRegions = regions;
-    //     count = 0;
+        pRegions = regions;
+        count = 0;
         
-    //     for(y = 0; y < LCD_HEIGHT; y += tileHeight) {
-    //         flags = *pRegions++;
-    //         for(x = 0; x < LCD_WIDTH; x += tileWidth) {
-    //             if(flags & 1) {
-    //                 lcd_drawBlock8(x, y, tileWidth, tileHeight, &altscreen[(y * lcdPitch) + (x * 2)]);
-    //                 count++;
-    //                 if(count == changed / 2)
-    //                     nanoSleep(4000LL);
-    //             }
-    //             flags >>= 1;
-    //         }
-    //     }
-    // }
+        for(y = 0; y < LCD_HEIGHT; y += tileHeight) {
+            flags = *pRegions++;
+            for(x = 0; x < LCD_WIDTH; x += tileWidth) {
+                if(flags & 1) {
+                    lcd_drawBlock8(x, y, tileWidth, tileHeight, &altscreen[(y * lcdPitch) + (x * 2)]);
+                    count++;
+                    if(count == changed / 2)
+                        nanoSleep(4000LL);
+                }
+                flags >>= 1;
+            }
+        }
+    }
 }
 
 static int ParseOpts(int argc, char *argv[]) {
