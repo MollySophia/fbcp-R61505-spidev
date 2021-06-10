@@ -207,26 +207,26 @@ static void fbCapture(void) {
 }
 
 static void copyLoop(void) {
-    // int changed;
-    // uint32_t flags, regions[32], *pRegions;
-    // int i, j, k, x, y, count;
+    int changed;
+    uint32_t flags, regions[32], *pRegions;
+    int i, j, k, x, y, count;
 
     fbCapture();
-    lcd_drawBlock16(0, 0, 320, 240, (uint16_t *)screen);
-    // changed = findChangedRegion(screen, altscreen, LCD_WIDTH, LCD_HEIGHT, lcdPitch, tileWidth, tileHeight, regions);
-    // if(changed) {
-    //     k = 0;
-    //     for(i = 0; i < LCD_HEIGHT; i+= tileHeight) {
-    //         if(regions[k]) {
-    //             j = tileHeight;
-    //             if(i + j > LCD_HEIGHT) 
-    //                 j = LCD_HEIGHT - i;
-    //             memcpy(altscreen + i * lcdPitch, (void*)(screen + i * lcdPitch), j * lcdPitch);
-    //         }
-    //         k++;
-    //     }
-    //     lcd_drawBlock16(0, 0, 320, 240, altscreen);
-    // }
+    // lcd_drawBlock16(0, 0, 320, 240, (uint16_t *)screen);
+    changed = findChangedRegion(screen, altscreen, LCD_WIDTH, LCD_HEIGHT, lcdPitch, tileWidth, tileHeight, regions);
+    if(changed) {
+        k = 0;
+        for(i = 0; i < LCD_HEIGHT; i+= tileHeight) {
+            if(regions[k]) {
+                j = tileHeight;
+                if(i + j > LCD_HEIGHT) 
+                    j = LCD_HEIGHT - i;
+                memcpy(altscreen + i * lcdPitch, (void*)(screen + i * lcdPitch), j * lcdPitch);
+            }
+            k++;
+        }
+        lcd_drawBlock16(0, 0, 320, 240, altscreen);
+    }
 }
 
 static void ShowHelp(void) {
