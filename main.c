@@ -297,7 +297,7 @@ int main(int argc, char **argv) {
     signal(SIGUSR1, ProgramInterruptHandler);
     signal(SIGUSR2, ProgramInterruptHandler);
     signal(SIGTERM, ProgramInterruptHandler);
-    
+
     showFPS = false;
     spiChannel = 1;
     spiFreq = 33000000;
@@ -356,7 +356,7 @@ int main(int argc, char **argv) {
         targetTime += frameDelta;
     }
 
-    munmap(fbfd, finfo.smem_len);
+    munmap(fb, finfo.smem_len);
     close(fbfd);
     return 0;
 }
