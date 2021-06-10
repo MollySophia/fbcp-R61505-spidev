@@ -186,12 +186,12 @@ static void fbCapture(void) {
 }
 
 static void copyLoop(void) {
-    int changed;
-    uint32_t flags, regions[32], *pRegions;
-    int i, j, k, x, y, count;
+    // int changed;
+    // uint32_t flags, regions[32], *pRegions;
+    // int i, j, k, x, y, count;
 
     fbCapture();
-    lcd_drawBlock16(0, 0, 320, 240, screen);
+    lcd_drawBlock16(0, 0, 320, 240, (uint16_t *)screen);
     // changed = findChangedRegion(screen, altscreen, LCD_WIDTH, LCD_HEIGHT, lcdPitch, tileWidth, tileHeight, regions);
     // if(changed) {
     //     k = 0;
@@ -271,7 +271,7 @@ static int ParseOpts(int argc, char *argv[]) {
 
 
 int main(int argc, char **argv) {
-    
+
     showFPS = false;
     spiChannel = 1;
     spiFreq = 33000000;
