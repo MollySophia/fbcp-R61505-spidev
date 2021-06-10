@@ -198,7 +198,7 @@ void lcd_drawBlock16(uint16_t x, uint16_t y, uint16_t width, uint16_t height, ui
         data[pos] = (bitmap[i] >> 8) & 0xff;
         data[pos + 1] = bitmap[i] & 0xff;
         pos += 2;
-        if(pos == 1024) {
+        if(pos == 4096) {
             spi_write(4096, data);
             pos = 0;
         }
