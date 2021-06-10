@@ -26,7 +26,7 @@ static struct fb_fix_screeninfo finfo;
 static int lcdPitch;
 static int fbfd;
 static int tileWidth, tileHeight;
-static bool running, showFPS = false, lcdFlip = false, background = false;
+static bool showFPS = false, lcdFlip = false, background = false;
 static int spiChannel = 1, spiFreq = 33000000, csPin = -1;
 
 static uint64_t nanoClock() {
@@ -191,38 +191,21 @@ static void copyLoop(void) {
     int i, j, k, x, y, count;
 
     fbCapture();
-    
-    changed = findChangedRegion(screen, altscreen, LCD_WIDTH, LCD_HEIGHT, lcdPitch, tileWidth, tileHeight, regions);
-    if(changed) {
-        k = 0;
-        for(i = 0; i < LCD_HEIGHT; i+= tileHeight) {
-            if(regions[k]) {
-                j = tileHeight;
-                if(i + j > LCD_HEIGHT) 
-                    j = LCD_HEIGHT - i;
-                memcpy(altscreen + i * lcdPitch, (void*)(screen + i * lcdPitch), j * lcdPitch);
-            }
-            k++;
-        }
-
-        // pRegions = regions;
-        // count = 0;
-        
-        // for(y = 0; y < LCD_HEIGHT; y += tileHeight) {
-        //     flags = pRegions[0];
-        //     pRegions++;
-        //     for(x = 0; x < LCD_WIDTH; x += tileWidth) {
-        //         if(flags & 1) {
-        //             lcd_drawBlock16(x, y, tileWidth, tileHeight, altscreen + (y * lcdPitch) + (x * 2));
-        //             count++;
-        //             // if(count == changed / 2)
-        //             //     nanoSleep(4000LL);
-        //         }
-        //         flags >>= 1;
-        //     }
-        // }
-        lcd_drawBlock16(0, 0, 320, 240, altscreen);
-    }
+    lcd_drawBlock16(0, 0, 320, 240, screen);
+    // changed = findChangedRegion(screen, altscreen, LCD_WIDTH, LCD_HEIGHT, lcdPitch, tileWidth, tileHeight, regions);
+    // if(changed) {
+    //     k = 0;
+    //     for(i = 0; i < LCD_HEIGHT; i+= tileHeight) {
+    //         if(regions[k]) {
+    //             j = tileHeight;
+    //             if(i + j > LCD_HEIGHT) 
+    //                 j = LCD_HEIGHT - i;
+    //             memcpy(altscreen + i * lcdPitch, (void*)(screen + i * lcdPitch), j * lcdPitch);
+    //         }
+    //         k++;
+    //     }
+    //     lcd_drawBlock16(0, 0, 320, 240, altscreen);
+    // }
 }
 
 static void ShowHelp(void) {
@@ -275,7 +258,7 @@ static int ParseOpts(int argc, char *argv[]) {
             i += 2;
         } else if(0 == strcmp("--help", argv[i])) {
             ShowHelp();
-            return 0;
+            exit(1);
         }
         else {
             fprintf(stderr, "Unknown parameter '%s'\n", argv[i]);
@@ -286,16 +269,40 @@ static int ParseOpts(int argc, char *argv[]) {
 
 } /* ParseOpts() */
 
-void *copyThread(void *arg) {
+
+int main(int argc, char **argv) {
+    
+    showFPS = false;
+    spiChannel = 1;
+    spiFreq = 33000000;
+    lcdFlip = false;
+    csPin = 13;
+    background = false;
+
+    tileWidth = 64;
+    tileHeight = 48;
+
+    ParseOpts(argc, argv);
+
+    if(initDisplay(lcdFlip, spiChannel, spiFreq, csPin) != 0) {
+        fprintf(stderr, "Failed to init LCD\n");
+        return 0;
+    }
+
+    printf("/dev/fb0: %dx%d, %dvinfo.bits_per_pixel\n", vinfo.xres, vinfo.yres, vinfo.bits_per_pixel);
+
+    if (vinfo.xres > 640)
+		printf("Warning: the framebuffer is too large and will not be copied properly; sipported sizes are 640x480 and 320x240\n");
+	if (vinfo.bits_per_pixel == 32)
+		printf("Warning: the framebuffer bit depth is 32-bpp, ideally it should be 16-bpp for fastest results\n");
+
     int64_t ns;
     uint64_t time, frameDelta, targetTime, oldTime;
     float fps;
     int videoFrames = 0;
-
-    frameDelta = 1000000000 / 60;
-    targetTime = oldTime = nanoClock() + frameDelta;
-
-    while(running) {
+    while(1) {
+        frameDelta = 1000000000 / 60;
+        targetTime = oldTime = nanoClock() + frameDelta;
         copyLoop();
         videoFrames++;
         time = nanoClock();
@@ -322,80 +329,6 @@ void *copyThread(void *arg) {
         }
         targetTime += frameDelta;
     }
-    return NULL;
-}
-
-void shutdown(void) {
-    running = 0; // tell background thread to stop
-    nanoSleep(50000000LL); // wait 50ms for work to finish
-    //spilcdShutdown();
-} 
-
-void signal_handler(int signum) {
-	printf("Ctrl-C hit; exiting...\n");
-	shutdown();
-	exit(0); // quit the program quietly
-} /* signal_handler() */
-
-int main(int argc, char **argv) {
-    int i;
-    pthread_t tinfo;
-
-    showFPS = false;
-    spiChannel = 1;
-    spiFreq = 33000000;
-    lcdFlip = false;
-    csPin = 13;
-    background = false;
-
-    tileWidth = 64;
-    tileHeight = 48;
-
-    ParseOpts(argc, argv);
-
-    if(initDisplay(lcdFlip, spiChannel, spiFreq, csPin) != 0) {
-        fprintf(stderr, "Failed to init LCD\n");
-        return 0;
-    }
-
-    printf("/dev/fb0: %dx%d, %dvinfo.bits_per_pixel\n", vinfo.xres, vinfo.yres, vinfo.bits_per_pixel);
-
-    if (vinfo.xres > 640)
-		printf("Warning: the framebuffer is too large and will not be copied properly; sipported sizes are 640x480 and 320x240\n");
-	if (vinfo.bits_per_pixel == 32)
-		printf("Warning: the framebuffer bit depth is 32-bpp, ideally it should be 16-bpp for fastest results\n");
-
-    signal(SIGINT, signal_handler);
-
-
-    uint64_t llTime;
-	int iFrames = 0;
-    llTime = nanoClock() + 1000000000LL;
-    while (nanoClock() < llTime) // run for 1 second
-    {	// force total redraw each frame
-        memset(altscreen, 0xff, lcdPitch * LCD_HEIGHT);
-        copyLoop();
-        iFrames++;
-    }
-    if (!background)
-    {
-        printf("Perf test: worst case framerate = %d FPS\n", iFrames);
-        if (iFrames < 25)
-            printf("<25FPS indicates there is something not configured correctly with your SW/HW\n");
-    }
-
-
-    running = true;
-    pthread_create(&tinfo, NULL, copyThread, NULL);
-
-    if(!background) {
-        printf("Press ENTER to quit\n");
-        getchar();
-    } else {
-        while(1);
-    }
-
-    shutdown();
 
     return 0;
 }
