@@ -26,7 +26,7 @@ static struct fb_fix_screeninfo finfo;
 static int lcdPitch;
 static int fbfd;
 static int tileWidth, tileHeight;
-static bool showFPS = false, lcdFlip = false, background = false;
+static bool running = true, showFPS = false, lcdFlip = false, background = false;
 static int spiChannel = 1, spiFreq = 33000000, csPin = -1;
 
 static uint64_t nanoClock() {
@@ -46,6 +46,27 @@ static void nanoSleep(uint64_t ns) {
 	ts.tv_nsec = ns;
 	nanosleep(&ts, NULL);
 } /* NanoSleep() */
+
+const char *SignalToString(int signal) {
+    if (signal == SIGINT) return "SIGINT";
+    if (signal == SIGQUIT) return "SIGQUIT";
+    if (signal == SIGUSR1) return "SIGUSR1";
+    if (signal == SIGUSR2) return "SIGUSR2";
+    if (signal == SIGTERM) return "SIGTERM";
+    return "?";
+}
+
+void ProgramInterruptHandler(int signal) {
+    printf("Signal %s(%d) received, quitting\n", SignalToString(signal), signal);
+    static int quitHandlerCalled = 0;
+    if (++quitHandlerCalled >= 5)
+    {
+    printf("Ctrl-C handler invoked five times, looks like fbcp-ili9341 is not gracefully quitting - performing a forcible shutdown!\n");
+    exit(1);
+    }
+
+    running = false;
+}
 
 static int initDisplay(bool lcdFlip, int spiChannel, int spiFreq, int csPin) {
     fbfd = open("/dev/fb0", O_RDWR);
@@ -271,7 +292,12 @@ static int ParseOpts(int argc, char *argv[]) {
 
 
 int main(int argc, char **argv) {
-
+    signal(SIGINT, ProgramInterruptHandler);
+    signal(SIGQUIT, ProgramInterruptHandler);
+    signal(SIGUSR1, ProgramInterruptHandler);
+    signal(SIGUSR2, ProgramInterruptHandler);
+    signal(SIGTERM, ProgramInterruptHandler);
+    
     showFPS = false;
     spiChannel = 1;
     spiFreq = 33000000;
@@ -300,7 +326,7 @@ int main(int argc, char **argv) {
     uint64_t time, frameDelta, targetTime, oldTime;
     float fps;
     int videoFrames = 0;
-    while(1) {
+    while(running) {
         frameDelta = 1000000000 / 60;
         targetTime = oldTime = nanoClock() + frameDelta;
         copyLoop();
@@ -330,5 +356,7 @@ int main(int argc, char **argv) {
         targetTime += frameDelta;
     }
 
+    munmap(fbfd, finfo.smem_len);
+    close(fbfd);
     return 0;
 }
