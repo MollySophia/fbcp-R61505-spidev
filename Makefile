@@ -1,5 +1,5 @@
 CFLAGS=-c -Wall -O3 -std=c11 -D_POSIX_C_SOURCE=199309L
-LIBS= -lpthread -lm
+LIBS= -lm
 
 all: fbcp
 
