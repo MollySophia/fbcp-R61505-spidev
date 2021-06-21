@@ -206,6 +206,7 @@ void lcd_drawBlock16(uint16_t x, uint16_t y, uint16_t width, uint16_t height, ui
     if(pos != 0)
         spi_write(pos, data);
     spi_cs(1);
+    usleep(10000LL);
 }
 
 
